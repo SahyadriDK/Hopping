@@ -134,17 +134,15 @@ result_table.rename_column('mag', 'V')
 result_table.rename_column('_RAJ2000', 'RAJ2000')
 result_table.rename_column('_DEJ2000', 'DEJ2000')
 
-result_table.add_column(np.zeros(len(result_table)), name="Messier")
-aa=[]
-bb=[]
-for x in messier_table['NGC']:
-    aa.append(x.split(','))
-for x in aa:
-    for i in range(len(result_table)):
-        for j in range(len(x)):
-            if x[j] == result_table['Name'][i]:
-                result_table['Messier'][i]=1
-                bb.append(i)
+# result_table.add_column(np.zeros(len(result_table)), name="Messier")
+# ngc_id=[]
+# for x in messier_table['NGC']:
+#     ngc_id.append(x.split(','))
+# for x in ngc_id:
+#     for i in range(len(result_table)):
+#         for j in range(len(x)):
+#             if x[j] == result_table['Name'][i]:
+#                 result_table['Messier'][i]=1
                 
 result_table.write("NGC.csv", format="csv", overwrite="True")
 
