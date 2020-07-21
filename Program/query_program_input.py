@@ -35,7 +35,7 @@ print('Done - Constellation borders\n')
 
 print('Downloading messier_objects.csv...')
 
-#Download magnitdue data from astropixels/SEDS
+# Download magnitdue data from astropixels/SEDS
 page = requests.get("http://astropixels.com/messier/messiercat.html")
 soup = BeautifulSoup(page.content,'html.parser')
 table = soup.find_all('tbody')[0]
@@ -58,7 +58,7 @@ result_table['RA_d_A_ICRS_J2000_2000'].name = "RAJ2000"
 result_table['DEC_d_D_ICRS_J2000_2000'].name = "DEJ2000"
 result_table['B-V'] = result_table['FLUX_B'] - result_table['V']
 result_table.remove_column('FLUX_B')
-result_table.rename_column('OTYPE_3', 'TYPE')
+result_table.rename_column('OTYPE_3', 'Type')
 
 coords = SkyCoord(result_table['RAJ2000'], result_table['DEJ2000'], unit="deg")
 const = coords.get_constellation()
@@ -69,11 +69,11 @@ result_table.add_column(const, name="Constellation", index=2)
 m = ['M {}'.format(i + 1) for i in range(len(const))]
 result_table.add_column(m, name='ID (for resolver)', index=0)
 
-otype = result_table['TYPE']
+otype = result_table['Type']
 internal_id = ['{}_{}_M{}'.format(otype[i], const_abr[i], str(i + 1)) for i in range(len(const))]
 result_table.add_column(internal_id, name="Internal ID Number", index=0)
 
-#Adding common names of the messier objects
+# Adding common names of the messier objects
 link = requests.get('https://en.wikipedia.org/wiki/Messier_object')
 soup = BeautifulSoup(link.content,'html.parser')
 table = soup.find_all('table',attrs={"class":"wikitable sortable"})[0]
@@ -84,9 +84,20 @@ for items in name_rows:
         names.append('-')
     else:
         names.append(items.get_text().strip('\n'))
+        
+nURL = 'https://en.wikipedia.org/wiki/Messier_object'
+npage = requests.get(nURL)
+nsoup = BeautifulSoup(npage.content, 'html.parser')
+ngc=[]
+for i in range(23,1013,9):
+    ngc.append(nsoup.find_all('td')[i].get_text().strip())
+   
+
 result_table.add_column(names,name="Common Name",index=3)
 result_table.add_column(mag,name="V (from SEDS)",index=8)
+result_table.add_column(ngc, name="NGC", index=2)
 
+messier_table = result_table
 
 result_table.write("messier_objects.csv", format="csv", overwrite="True")# creates a csv file
 
@@ -106,7 +117,7 @@ result_table['Type'] = np.array([
                                     for x in result_table['Type']])
 result_table['Name'] = [" ".join(x.split()) for x in result_table['Name']]
 
-# A dding constellation names
+# Adding constellation names
 coords = SkyCoord(result_table['_RAJ2000'], result_table['_DEJ2000'], unit="deg")
 const = coords.get_constellation()
 const = ['Bootes' if x == 'Boötes' else x for x in const]  # fixing for the unicode problem
@@ -122,6 +133,19 @@ result_table.add_column(internal_id, name="Internal ID Number", index=0)
 result_table.rename_column('mag', 'V')
 result_table.rename_column('_RAJ2000', 'RAJ2000')
 result_table.rename_column('_DEJ2000', 'DEJ2000')
+
+result_table.add_column(np.zeros(len(result_table)), name="Messier")
+aa=[]
+bb=[]
+for x in messier_table['NGC']:
+    aa.append(x.split(','))
+for x in aa:
+    for i in range(len(result_table)):
+        for j in range(len(x)):
+            if x[j] == result_table['Name'][i]:
+                result_table['Messier'][i]=1
+                bb.append(i)
+                
 result_table.write("NGC.csv", format="csv", overwrite="True")
 
 # Cross-reference catalogue for NGC
